@@ -1,0 +1,19 @@
+{
+  "name": "bot_launcher",
+  "version": "0.1.0",
+  "description": "Given a decision tree in a specified format, it launches a bot based on the Microsoft Bot Framework",
+  "main": "app.js",
+  "scripts": {
+    "test": "node bot.js"
+  },
+  "keywords": [
+    "bot",
+    "decision tree"
+  ],
+  "author": "Davide Sbetti",
+  "license": "ISC",
+  "dependencies": {
+    "botbuilder": "^3.13.1",
+    "restify": "^8.3.0"
+  }
+}
