@@ -44,7 +44,7 @@ bot.set(`persistConversationData`, false);
 bot.dialog("introduction", [
 
    function (session) {
-      session.endDialog("Hello! I am a test bot and today I will give you my advice about playing soccer or not, based on some simple questions :)");
+      session.endDialog("Hello! I am a test bot and today I will try to help yoou :)");
    }
 ]);
 
