@@ -49,6 +49,7 @@ bot.dialog("introduction", [
 ]);
 
 var choices;
+var isNumeric = false;
 
 bot.dialog("traverseTree", [
 
@@ -70,38 +71,78 @@ bot.dialog("traverseTree", [
          session.send("My conclusion is: " + node.label);
          session.endConversation("Bye, it has been a pleasure!");
       } else {
-      //otherwise we send the user a question....
+         //otherwise we send the user a question....
 
-      var question = "What is the value of " + node.label; //question
-      choices = []; //answer array
+         var question = "What is the value of " + node.label; //question
+         choices = []; //answer array
 
-      node.children.forEach(function (child) { //for each child
+         //check type of question, is it a numeric/nominal answer?
+         if (node.children[0].hasOwnProperty('edgeLabel') && (node.children[0].edgeLabel.includes('<=') || node.children[0].edgeLabel.includes('>'))) {
+            
+            isNumeric = true; //mark the question as numeric  
 
-         //if the child does not have the edgeLabel property there is an error in the JSON file
-         if (!child.hasOwnProperty('edgeLabel')) {
-            console.log("ERROR: A child node does not have the edgeLabel property"); //print error message on the console
-            //Return generic error message and end the conversation
-            session.endConversation("There has been a problem with my decision strategy. Please refer to the terminal logs");
+            builder.Prompts.number(session, question); //show the prompt to the user
+
+         } else {
+
+            node.children.forEach(function (child) { //for each child
+
+               //if the child does not have the edgeLabel property there is an error in the JSON file
+               if (!child.hasOwnProperty('edgeLabel')) {
+                  console.log("ERROR: A child node does not have the edgeLabel property"); //print error message on the console
+                  //Return generic error message and end the conversation
+                  session.endConversation("There has been a problem with my decision strategy. Please refer to the terminal logs");
+               }
+
+               choices.push(child.edgeLabel);
+            });
+
+            //choices array is now complete so we can send the question
+            builder.Prompts.choice(session, question, choices, { listStyle: builder.ListStyle.button, minScore: 1.0 });
          }
+      }
+   },
+   function (session, results) {
 
-         choices.push(child.edgeLabel);
-      });
-
-      //choices array is now complete so we can send the question
-      builder.Prompts.choice(session,question, choices , { listStyle: builder.ListStyle.button, minScore: 1.0});
-   }
-   }, 
-   function(session,results){
-     
       //We now have the choice the user made in the current subtree
-     //So let's iterate over the children to find the chosen one
-   
-     session.userData.node.children.forEach(function(child){
-         
-         if(child.edgeLabel == results.response.entity){
+      //If it is numeric we have to perform the actual comparison to choose the branch
+      //otherwise, we just compare the labels
+
+      if(isNumeric){
+
+         session.userData.node.children.forEach(function (child) {
+
+            if (child.edgeLabel.includes('<=')) {
+               //parsing value from the edge label
+               var val = parseFloat(child.edgeLabel.replace(/<=\s*/g,''));
+            
+               if(results.response <= val){ //comparing user's value with label one and the given operator
+                  session.userData.node = child;
+                  isNumeric = false;
+                  session.replaceDialog("traverseTree");
+               } 
+
+               
+            } else{
+               //parsing value from the edge label
+               var val = parseFloat(child.edgeLabel.replace(/>\s*/g,''));
+            
+               if(results.response > val){ //comparing user's value with label one and the given operator
+                  session.userData.node = child;
+                  isNumeric = false;
+                  session.replaceDialog("traverseTree");
+               } 
+            } 
+         });
+      }
+      else {
+      session.userData.node.children.forEach(function (child) {
+
+         if (child.edgeLabel == results.response.entity) {
             session.userData.node = child;
             session.replaceDialog("traverseTree");
          }
       });
+   }
    }
 ]);
