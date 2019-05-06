@@ -32,21 +32,25 @@ var inMemoryStorage = new builder.MemoryBotStorage();
 var bot = new builder.UniversalBot(connector, [
    function (session) {
       session.userData.node = currentNode;
-      session.beginDialog("introduction");
-   },
-   function (session) {
       session.beginDialog("traverseTree");
    }]);
 
 //disable persistence of conversation data
 bot.set(`persistConversationData`, false);
 
-bot.dialog("introduction", [
-
-   function (session) {
-      session.endDialog("Hello! I am a test bot and today I will try to help yoou :)");
+bot.on('conversationUpdate', function(message) {
+   // Send a hello message when bot is added
+   if (message.membersAdded) {
+       message.membersAdded.forEach(function(identity) {
+           if (identity.id === message.address.bot.id) {
+               var reply = new builder.Message().address(message.address).text("Hi! I am a bot and now I will try to help you! Whenever you are ready, tyope something so we can start :)");
+               bot.send(reply);
+           }
+       });
    }
-]);
+});
+
+
 
 var choices;
 var isNumeric = false;
