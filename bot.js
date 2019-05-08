@@ -1,6 +1,5 @@
 var restify = require('restify'); //used to create the rest service 
 var builder = require('botbuilder'); //used to create the bot connector
-var answer = require("./Answer.js"); //used to create the answer object memorized 
 const fs = require('fs'); //used to read the JSON input file
 
 //Reading console arguments
@@ -29,13 +28,11 @@ server.post('/api/messages', connector.listen());
 
 var inMemoryStorage = new builder.MemoryBotStorage(); //TODO check what the hell is this
 
-//Create map in order to memorize the answers
-var answerMap = new Map();
-
 //Defining bot and dialogs
 var bot = new builder.UniversalBot(connector, [
    function (session) {
       session.userData.node = currentNode;
+      session.userData.answerMap = {};
       session.beginDialog("traverseTree");
    }]);
 
@@ -64,6 +61,7 @@ bot.dialog("traverseTree", [
    function (session) {
 
       var node = session.userData.node;
+      var answerMap = session.userData.answerMap;
 
       //if the current label does not have the label property there is an error with the JSON
       if (!node.hasOwnProperty('label')) {
@@ -77,31 +75,29 @@ bot.dialog("traverseTree", [
       //if the node does not have any children we send the user the conclusion/last message, we dump the
       // variable states to the console and we terminate
       if (!node.hasOwnProperty('children')) {
+         
          //TODO dump variables from the list
          console.log("-------DUMP VARIABLE START-------");
-         answerMap.forEach(function(value, key, map){
-           if(value.getType() == "numeric"){
-            console.log("Question: " + key + " with Answer: " + value.getAnswer().response);
-           } else {
-            console.log("Question: " + key + " with Answer: " + value.getAnswer().response.entity);
-           }
-         });
+         console.log(session.userData.answerMap);
          console.log("-------DUMP VARIABLE END-------");
 
          //Print conclusion and end conversation
          session.send("My conclusion is: " + node.label);
          session.endConversation("Bye, it has been a pleasure!");
       } else {
+        
          //otherwise we check if we already know the answer before sending the question
-         if (answerMap.has(node.label)) { //if we know the answer we just jump to the right branch
-            
-            var answer = answerMap.get(node.label); //initialize with the answer
-            
-            if(answer.getType() == "numeric"){
+         if (answerMap.hasOwnProperty(node.label)) { //if we know the answer we just jump to the right branch
+            var nodeLab = node.label;
+            var answ = answerMap[nodeLab]; //initialize with the answer
+           
+            console.log("answer is " + answ);
+
+            if(answ["type"] == "numeric"){
                isNumeric = true;
             }
 
-            manageAnswer(session, answer.getAnswer() ); //directly jump to the right branch
+            manageAnswer(session, answ["answer"] ); //directly jump to the right branch
         
          } else { //otherwise we send the question
 
@@ -139,13 +135,17 @@ bot.dialog("traverseTree", [
        //Create the appropriate answer object so we can add it to the answer map
        var answ;
        if(isNumeric){
-         answ = new answer(results, "numeric");
+         answ = {"answer": results, "type" : "numeric"};
        } else {
-         answ = new answer(results, "categorical");
+         answ = {"answer": results, "type" : "categorical"};
        }
 
        //add it to the map
-       answerMap.set(session.userData.node.label, answ);
+       var answerMap = session.userData.answerMap;
+       console.log("DEBUG [150]: " + session.userData.answerMap);
+       console.log("DEBUG [150]: " + session.userData.node);
+       var nodeLab = session.userData.node.label;
+       answerMap[nodeLab] = answ;
 
       //We now have the choice the user made in the current subtree
       manageAnswer(session, results);
