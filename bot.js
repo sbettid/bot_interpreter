@@ -1,6 +1,7 @@
-var restify = require('restify');
-var builder = require('botbuilder');
-const fs = require('fs');
+var restify = require('restify'); //used to create the rest service 
+var builder = require('botbuilder'); //used to create the bot connector
+var answer = require("./Answer.js"); //used to create the answer object memorized 
+const fs = require('fs'); //used to read the JSON input file
 
 //Reading console arguments
 const args = process.argv.slice(2)
@@ -26,7 +27,10 @@ var connector = new builder.ChatConnector({
 // Listen for messages from users 
 server.post('/api/messages', connector.listen());
 
-var inMemoryStorage = new builder.MemoryBotStorage();
+var inMemoryStorage = new builder.MemoryBotStorage(); //TODO check what the hell is this
+
+//Create map in order to memorize the answers
+var answerMap = new Map();
 
 //Defining bot and dialogs
 var bot = new builder.UniversalBot(connector, [
@@ -38,15 +42,15 @@ var bot = new builder.UniversalBot(connector, [
 //disable persistence of conversation data
 bot.set(`persistConversationData`, false);
 
-bot.on('conversationUpdate', function(message) {
+bot.on('conversationUpdate', function (message) {
    // Send a hello message when bot is added
    if (message.membersAdded) {
-       message.membersAdded.forEach(function(identity) {
-           if (identity.id === message.address.bot.id) {
-               var reply = new builder.Message().address(message.address).text("Hi! I am a bot and now I will try to help you! Whenever you are ready, tyope something so we can start :)");
-               bot.send(reply);
-           }
-       });
+      message.membersAdded.forEach(function (identity) {
+         if (identity.id === message.address.bot.id) {
+            var reply = new builder.Message().address(message.address).text("Hi! I am a bot and now I will try to help you! Whenever you are ready, tyope something so we can start :)");
+            bot.send(reply);
+         }
+      });
    }
 });
 
@@ -70,83 +74,124 @@ bot.dialog("traverseTree", [
          session.endConversation("There has been a problem with my decision strategy. Please refer to the terminal logs");
       }
 
-      //if the node does not have any children we send the user the conclusion/last message and we terminate
+      //if the node does not have any children we send the user the conclusion/last message, we dump the
+      // variable states to the console and we terminate
       if (!node.hasOwnProperty('children')) {
+         //TODO dump variables from the list
+         console.log("-------DUMP VARIABLE START-------");
+         answerMap.forEach(function(value, key, map){
+           if(value.getType() == "numeric"){
+            console.log("Question: " + key + " with Answer: " + value.getAnswer().response);
+           } else {
+            console.log("Question: " + key + " with Answer: " + value.getAnswer().response.entity);
+           }
+         });
+         console.log("-------DUMP VARIABLE END-------");
+
+         //Print conclusion and end conversation
          session.send("My conclusion is: " + node.label);
          session.endConversation("Bye, it has been a pleasure!");
       } else {
-         //otherwise we send the user a question....
-
-         var question = "What is the value of " + node.label; //question
-         choices = []; //answer array
-
-         //check type of question, is it a numeric/nominal answer?
-         if (node.children[0].hasOwnProperty('edgeLabel') && (node.children[0].edgeLabel.includes('<=') || node.children[0].edgeLabel.includes('>'))) {
+         //otherwise we check if we already know the answer before sending the question
+         if (answerMap.has(node.label)) { //if we know the answer we just jump to the right branch
             
-            isNumeric = true; //mark the question as numeric  
+            var answer = answerMap.get(node.label); //initialize with the answer
+            
+            if(answer.getType() == "numeric"){
+               isNumeric = true;
+            }
 
-            builder.Prompts.number(session, question); //show the prompt to the user
+            manageAnswer(session, answer.getAnswer() ); //directly jump to the right branch
+        
+         } else { //otherwise we send the question
 
-         } else {
+            var question = "What is the value of " + node.label; //question
+            choices = []; //answer array
 
-            node.children.forEach(function (child) { //for each child
+            //check type of question, is it a numeric/nominal answer?
+            if (node.children[0].hasOwnProperty('edgeLabel') && (node.children[0].edgeLabel.includes('<=') || node.children[0].edgeLabel.includes('>'))) {
 
-               //if the child does not have the edgeLabel property there is an error in the JSON file
-               if (!child.hasOwnProperty('edgeLabel')) {
-                  console.log("ERROR: A child node does not have the edgeLabel property"); //print error message on the console
-                  //Return generic error message and end the conversation
-                  session.endConversation("There has been a problem with my decision strategy. Please refer to the terminal logs");
-               }
+               isNumeric = true; //mark the question as numeric  
 
-               choices.push(child.edgeLabel);
-            });
+               builder.Prompts.number(session, question); //show the prompt to the user
 
-            //choices array is now complete so we can send the question
-            builder.Prompts.choice(session, question, choices, { listStyle: builder.ListStyle.button, minScore: 1.0 });
+            } else {
+
+               node.children.forEach(function (child) { //for each child
+
+                  //if the child does not have the edgeLabel property there is an error in the JSON file
+                  if (!child.hasOwnProperty('edgeLabel')) {
+                     console.log("ERROR: A child node does not have the edgeLabel property"); //print error message on the console
+                     //Return generic error message and end the conversation
+                     session.endConversation("There has been a problem with my decision strategy. Please refer to the terminal logs");
+                  }
+
+                  choices.push(child.edgeLabel);
+               });
+
+               //choices array is now complete so we can send the question
+               builder.Prompts.choice(session, question, choices, { listStyle: builder.ListStyle.button, minScore: 1.0 });
+            }
          }
       }
    },
    function (session, results) {
+       //Create the appropriate answer object so we can add it to the answer map
+       var answ;
+       if(isNumeric){
+         answ = new answer(results, "numeric");
+       } else {
+         answ = new answer(results, "categorical");
+       }
+
+       //add it to the map
+       answerMap.set(session.userData.node.label, answ);
 
       //We now have the choice the user made in the current subtree
-      //If it is numeric we have to perform the actual comparison to choose the branch
+      manageAnswer(session, results);
+   }
+]);
+
+function manageAnswer(session, results){
+   
+   //console.log("DEBUG: inside manage answer with question " + session.userData.node.label + " and answer re")
+   //If it is numeric we have to perform the actual comparison to choose the branch
       //otherwise, we just compare the labels
 
-      if(isNumeric){
-
+      if (isNumeric) {
+      
          session.userData.node.children.forEach(function (child) {
 
             if (child.edgeLabel.includes('<=')) {
                //parsing value from the edge label
-               var val = parseFloat(child.edgeLabel.replace(/<=\s*/g,''));
-            
-               if(results.response <= val){ //comparing user's value with label one and the given operator
-                  session.userData.node = child;
-                  isNumeric = false;
-                  session.replaceDialog("traverseTree");
-               } 
+               var val = parseFloat(child.edgeLabel.replace(/<=\s*/g, ''));
 
-               
-            } else{
-               //parsing value from the edge label
-               var val = parseFloat(child.edgeLabel.replace(/>\s*/g,''));
-            
-               if(results.response > val){ //comparing user's value with label one and the given operator
+               if (results.response <= val) { //comparing user's value with label one and the given operator
                   session.userData.node = child;
                   isNumeric = false;
                   session.replaceDialog("traverseTree");
-               } 
-            } 
+               }
+
+
+            } else {
+               //parsing value from the edge label
+               var val = parseFloat(child.edgeLabel.replace(/>\s*/g, ''));
+
+               if (results.response > val) { //comparing user's value with label one and the given operator
+                  session.userData.node = child;
+                  isNumeric = false;
+                  session.replaceDialog("traverseTree");
+               }
+            }
          });
       }
       else {
-      session.userData.node.children.forEach(function (child) {
+         session.userData.node.children.forEach(function (child) {
 
-         if (child.edgeLabel == results.response.entity) {
-            session.userData.node = child;
-            session.replaceDialog("traverseTree");
-         }
-      });
-   }
-   }
-]);
+            if (child.edgeLabel == results.response.entity) {
+               session.userData.node = child;
+               session.replaceDialog("traverseTree");
+            }
+         });
+      }
+}
