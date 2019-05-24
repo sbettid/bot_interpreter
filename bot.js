@@ -44,7 +44,7 @@ bot.on('conversationUpdate', function (message) {
    if (message.membersAdded) {
       message.membersAdded.forEach(function (identity) {
          if (identity.id === message.address.bot.id) {
-            var reply = new builder.Message().address(message.address).text("Hi! I am a bot and now I will try to help you! Whenever you are ready, tyope something so we can start :)");
+            var reply = new builder.Message().address(message.address).text("Hi! I am a bot and now I will try to help you! Whenever you are ready, type something so we can start :)");
             bot.send(reply);
          }
       });
