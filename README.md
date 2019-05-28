@@ -7,10 +7,12 @@ The application takes as input a JSON file that specifies the decision tree in t
 
 The tree is specified in a recursive way, where each node, except the leafs, contains the list of its children nodes. Moreover, every node has a label attribute specifying its label/question and this property will be the one asked to the user during the conversation. All nodes (beside the root) have an edgeLabel property, which rapresents the label of the edge from the parent node and, in our case, also the answer to the parent's question that will determine the next node in the path. 
 
-For a complete example of a decison tree specified in such a format, please have a look at the examples/test_tree.json file, which represent the following classification tree:
+For a complete example of a decison tree specified in such a format, please have a look at the examples/test_tree.json file, which represent the following classification tree used to take the decision of playing tennis based on the weather:
 
+<p align="center">
+    <img src="examples/tree_test.jpg">
+</p>
 
-![alt text](examples/tree_test.jpg)
 
 ## Features
 
