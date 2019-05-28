@@ -9,7 +9,7 @@ The tree is specified in a recursive way, where each node, except the leafs, con
 
 For a complete example of a decison tree specified in such a format, please have a look at the examples/test_tree.json file, which represent the following classification tree used to take the decision of playing tennis based on the weather:
 
-<p align="center">
+<p style="text-align: center">
     <img src="examples/tree_test.jpg">
 </p>
 
@@ -42,6 +42,17 @@ To start the bot interpreter, open a terminal window in the root folder of the p
 For example, we can use one of the sample graphs provided with the tool and test our both using the following command:
 
 `node bot.js test_tree.json`
+
+After the bot application has started, we can connect to it and start talking!
+The application will dump on the console the address and port used on the local machine and that can be used for the connection. 
+
+If you are using, as suggested, the Bot Framework Emulator, it is possible to simply connect to the application using a chat-fashion interface and then save the configuration to a file for faster future connections. 
+
+By default, the Emulator will be able to access the chatbot application at the following address: 
+
+`http://localhost:3978/api/messages`
+
+Note: the port number could vary depending on the available ports of your machine
 
 ## License
 
