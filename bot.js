@@ -1,12 +1,29 @@
 var restify = require('restify'); //used to create the rest service 
 var builder = require('botbuilder'); //used to create the bot connector
 const fs = require('fs'); //used to read the JSON input file
+var program = require('commander'); //used to parse console arguments and display help
 
-//Reading console arguments
-const args = process.argv.slice(2)
+var questions = false; //By default we are not using questions from an external file
+var questionsList = undefined;
+
+program.version('0.1.0'); // set the program version
+
+//Add the possible and required options
+program.option('-t, --tree <file_path>', 'file path to the exported json decision tree (REQUIRED)');
+program.option('-q, --questions <file_path>', 'file path to the question specification file');
+
+//Reading console arguments and throwing an error if decision tree file has not been specified
+program.parse(process.argv);
+
+if(!program.tree) //throw an error if the required option has not been specified
+   throw new Error("--tree option required");
+
+if(program.questions)
+   extract_answers(program.questions)
+    
 
 //Reading the content of the file
-var rawdata = fs.readFileSync(args[0]);
+var rawdata = fs.readFileSync(program.tree);
 
 //Parsing it using the JSON parser
 var currentNode = JSON.parse(rawdata);
@@ -194,4 +211,9 @@ function manageAnswer(session, results){
             }
          });
       }
+}
+
+
+function extract_answers(questionsFile){
+   //read file and extract answers
 }
