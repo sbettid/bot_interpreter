@@ -2,9 +2,9 @@ var restify = require('restify'); //used to create the rest service
 var builder = require('botbuilder'); //used to create the bot connector
 const fs = require('fs'); //used to read the JSON input file
 var program = require('commander'); //used to parse console arguments and display help
-
-var questions = false; //By default we are not using questions from an external file
-var questionsList = undefined;
+var rl = require('readline');
+//By default we are not using questions from an external file
+var questionsList = new Map();
 
 program.version('0.1.0'); // set the program version
 
@@ -18,7 +18,7 @@ program.parse(process.argv);
 if(!program.tree) //throw an error if the required option has not been specified
    throw new Error("--tree option required");
 
-if(program.questions)
+if(program.questions) //If the user specified a questions file
    extract_answers(program.questions)
     
 
@@ -93,10 +93,13 @@ bot.dialog("traverseTree", [
       // variable states to the console and we terminate
       if (!node.hasOwnProperty('children')) {
          
-         //TODO dump variables from the list
+         //dump variables from the list
          console.log("-------DUMP VARIABLE START-------");
          console.log(session.userData.answerMap);
          console.log("-------DUMP VARIABLE END-------");
+
+         //clean the answer map
+         session.userData.answerMap = {};
 
          //Print conclusion and end conversation
          session.send("My conclusion is: " + node.label);
@@ -118,7 +121,14 @@ bot.dialog("traverseTree", [
         
          } else { //otherwise we send the question
 
-            var question = "What is the value of " + node.label; //question
+            //We check if we are using the questions file or the default mode
+            var question;
+            var retrievedQuestion = questionsList.get(node.label);
+            if(program.questions && retrievedQuestion != undefined)
+               question = retrievedQuestion;
+            else
+               question = "What is the value of " + node.label; //question
+            
             choices = []; //answer array
 
             //check type of question, is it a numeric/nominal answer?
@@ -215,5 +225,18 @@ function manageAnswer(session, results){
 
 
 function extract_answers(questionsFile){
-   //read file and extract answers
+   var key, value;
+   
+   //open and read file
+   var lineReader = rl.createInterface({
+      input: fs.createReadStream(questionsFile)
+    });
+    //parse each line
+    lineReader.on('line', function (line) {
+      key = line.substring(0, line.indexOf(':')).trim(); //parse the key
+      value = line.substring(line.indexOf(':') + 1).trim(); // parse the value
+   
+      //add everything to the questions list map
+      questionsList.set(key, value);
+    });
 }

@@ -1,0 +1,3 @@
+petalwidth : What is the width of the petal?
+petallength : What is the length of the petal?
+sepallength : What is the length of the sepal?
