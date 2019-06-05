@@ -2,28 +2,30 @@ var restify = require('restify'); //used to create the rest service
 var builder = require('botbuilder'); //used to create the bot connector
 const fs = require('fs'); //used to read the JSON input file
 var program = require('commander'); //used to parse console arguments and display help
-var rl = require('readline');
 //By default we are not using questions from an external file
 var questionsList = new Map();
 
 program.version('0.1.0'); // set the program version
 
 //Add the possible and required options
-program.option('-t, --tree <file_path>', 'file path to the exported json decision tree (REQUIRED)');
+program.option('-t, --tree <file_path>', 'file path to the exported json decision tree');
 program.option('-q, --questions <file_path>', 'file path to the question specification file');
 
 //Reading console arguments and throwing an error if decision tree file has not been specified
 program.parse(process.argv);
 
-if(!program.tree) //throw an error if the required option has not been specified
-   throw new Error("--tree option required");
+var rawdata;
 
-if(program.questions) //If the user specified a questions file
+if (program.tree) //throw an error if the required option has not been specified
+   rawdata = fs.readFileSync(program.tree);
+else {
+   s = process.argv[process.argv.length - 1];
+   rawdata = s;
+   console.log("Your data: " + rawdata);
+}
+
+if (program.questions) //If the user specified a questions file
    extract_answers(program.questions)
-    
-
-//Reading the content of the file
-var rawdata = fs.readFileSync(program.tree);
 
 //Parsing it using the JSON parser
 var currentNode = JSON.parse(rawdata);
@@ -92,7 +94,7 @@ bot.dialog("traverseTree", [
       //if the node does not have any children we send the user the conclusion/last message, we dump the
       // variable states to the console and we terminate
       if (!node.hasOwnProperty('children')) {
-         
+
          //dump variables from the list
          console.log("-------DUMP VARIABLE START-------");
          console.log(session.userData.answerMap);
@@ -105,30 +107,30 @@ bot.dialog("traverseTree", [
          session.send("My conclusion is: " + node.label);
          session.endConversation("Bye, it has been a pleasure!");
       } else {
-        
+
          //otherwise we check if we already know the answer before sending the question
          if (answerMap.hasOwnProperty(node.label)) { //if we know the answer we just jump to the right branch
             var nodeLab = node.label;
             var answ = answerMap[nodeLab]; //initialize with the answer
-           
+
             console.log("answer is " + answ);
 
-            if(answ["type"] == "numeric"){
+            if (answ["type"] == "numeric") {
                isNumeric = true;
             }
 
-            manageAnswer(session, answ["answer"] ); //directly jump to the right branch
-        
+            manageAnswer(session, answ["answer"]); //directly jump to the right branch
+
          } else { //otherwise we send the question
 
             //We check if we are using the questions file or the default mode
             var question;
             var retrievedQuestion = questionsList.get(node.label);
-            if(program.questions && retrievedQuestion != undefined)
+            if (program.questions && retrievedQuestion != undefined)
                question = retrievedQuestion;
             else
                question = "What is the value of " + node.label; //question
-            
+
             choices = []; //answer array
 
             //check type of question, is it a numeric/nominal answer?
@@ -159,84 +161,84 @@ bot.dialog("traverseTree", [
       }
    },
    function (session, results) {
-       //Create the appropriate answer object so we can add it to the answer map
-       var answ;
-       if(isNumeric){
-         answ = {"answer": results, "type" : "numeric"};
-       } else {
-         answ = {"answer": results, "type" : "categorical"};
-       }
+      //Create the appropriate answer object so we can add it to the answer map
+      var answ;
+      if (isNumeric) {
+         answ = { "answer": results, "type": "numeric" };
+      } else {
+         answ = { "answer": results, "type": "categorical" };
+      }
 
-       //add it to the map
-       var answerMap = session.userData.answerMap;
-       console.log("DEBUG [150]: " + session.userData.answerMap);
-       console.log("DEBUG [150]: " + session.userData.node);
-       var nodeLab = session.userData.node.label;
-       answerMap[nodeLab] = answ;
+      //add it to the map
+      var answerMap = session.userData.answerMap;
+      console.log("DEBUG [150]: " + session.userData.answerMap);
+      console.log("DEBUG [150]: " + session.userData.node);
+      var nodeLab = session.userData.node.label;
+      answerMap[nodeLab] = answ;
 
       //We now have the choice the user made in the current subtree
       manageAnswer(session, results);
    }
 ]);
 
-function manageAnswer(session, results){
-   
+function manageAnswer(session, results) {
+
    //console.log("DEBUG: inside manage answer with question " + session.userData.node.label + " and answer re")
    //If it is numeric we have to perform the actual comparison to choose the branch
-      //otherwise, we just compare the labels
+   //otherwise, we just compare the labels
 
-      if (isNumeric) {
-      
-         session.userData.node.children.forEach(function (child) {
+   if (isNumeric) {
 
-            if (child.edgeLabel.includes('<=')) {
-               //parsing value from the edge label
-               var val = parseFloat(child.edgeLabel.replace(/<=\s*/g, ''));
+      session.userData.node.children.forEach(function (child) {
 
-               if (results.response <= val) { //comparing user's value with label one and the given operator
-                  session.userData.node = child;
-                  isNumeric = false;
-                  session.replaceDialog("traverseTree");
-               }
+         if (child.edgeLabel.includes('<=')) {
+            //parsing value from the edge label
+            var val = parseFloat(child.edgeLabel.replace(/<=\s*/g, ''));
 
-
-            } else {
-               //parsing value from the edge label
-               var val = parseFloat(child.edgeLabel.replace(/>\s*/g, ''));
-
-               if (results.response > val) { //comparing user's value with label one and the given operator
-                  session.userData.node = child;
-                  isNumeric = false;
-                  session.replaceDialog("traverseTree");
-               }
-            }
-         });
-      }
-      else {
-         session.userData.node.children.forEach(function (child) {
-
-            if (child.edgeLabel == results.response.entity) {
+            if (results.response <= val) { //comparing user's value with label one and the given operator
                session.userData.node = child;
+               isNumeric = false;
                session.replaceDialog("traverseTree");
             }
-         });
-      }
+
+
+         } else {
+            //parsing value from the edge label
+            var val = parseFloat(child.edgeLabel.replace(/>\s*/g, ''));
+
+            if (results.response > val) { //comparing user's value with label one and the given operator
+               session.userData.node = child;
+               isNumeric = false;
+               session.replaceDialog("traverseTree");
+            }
+         }
+      });
+   }
+   else {
+      session.userData.node.children.forEach(function (child) {
+
+         if (child.edgeLabel == results.response.entity) {
+            session.userData.node = child;
+            session.replaceDialog("traverseTree");
+         }
+      });
+   }
 }
 
 
-function extract_answers(questionsFile){
+function extract_answers(questionsFile) {
    var key, value;
-   
+
    //open and read file
    var lineReader = rl.createInterface({
       input: fs.createReadStream(questionsFile)
-    });
-    //parse each line
-    lineReader.on('line', function (line) {
+   });
+   //parse each line
+   lineReader.on('line', function (line) {
       key = line.substring(0, line.indexOf(':')).trim(); //parse the key
       value = line.substring(line.indexOf(':') + 1).trim(); // parse the value
-   
+
       //add everything to the questions list map
       questionsList.set(key, value);
-    });
+   });
 }
