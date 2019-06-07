@@ -19,9 +19,9 @@ var rawdata;
 if (program.tree) //throw an error if the required option has not been specified
    rawdata = fs.readFileSync(program.tree);
 else {
+   console.log("Arguments are " + program.rawArgs);
    s = process.argv[process.argv.length - 1];
    rawdata = s;
-   console.log("Your data: " + rawdata);
 }
 
 if (program.questions) //If the user specified a questions file
