@@ -2,6 +2,7 @@ var restify = require('restify'); //used to create the rest service
 var builder = require('botbuilder'); //used to create the bot connector
 const fs = require('fs'); //used to read the JSON input file
 var program = require('commander'); //used to parse console arguments and display help
+var rl = require('readline');
 //By default we are not using questions from an external file
 var questionsList = new Map();
 
@@ -126,8 +127,10 @@ bot.dialog("traverseTree", [
             //We check if we are using the questions file or the default mode
             var question;
             var retrievedQuestion = questionsList.get(node.label);
-            if (program.questions && retrievedQuestion != undefined)
-               question = retrievedQuestion;
+            //console.log("retrievedQuestion is " + retrievedQuestion + " after looking for " + node.label);
+            if (program.questions && retrievedQuestion != undefined){
+               question = retrievedQuestion; 
+            }
             else
                question = "What is the value of " + node.label; //question
 
@@ -240,5 +243,6 @@ function extract_answers(questionsFile) {
 
       //add everything to the questions list map
       questionsList.set(key, value);
+      //console.log("Key: " + key + " with question " + value);
    });
 }
