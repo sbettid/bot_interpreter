@@ -1,11 +1,11 @@
 # Bot - Interpreter
-Bot interpreter is a Node.js application able to use a decision tree, specified in JSON, to create a local RESTful chatbot application using the [Microsoft Bot Framework](https://dev.botframework.com/). It has been developed as part of a Bachelor Thesis project involving the creation of a classification chatbot. 
+Bot Interpreter is a Node.js application able to use a decision tree, specified in JSON, to create a local RESTful chatbot application using the [Microsoft Bot Framework](https://dev.botframework.com/). It has been developed as part of a Bachelor thesis project involving the creation of a classification chatbot. 
 
-The application takes as input a JSON file that specifies the decision tree in the following format: 
+The application takes as input a JSON specification of the decision tree in the following format: 
 
 `{label: “node1”, children: [{ edgeLabel: “to_node_2”, label: node_2 }, { edgeLabel: “to_node_3”, label: “node_3”, children […]  }]}`
 
-The tree is specified in a recursive way, where each node, except the leafs, contains the list of its children nodes. Moreover, every node has a label attribute specifying its label/question and this property will be the one asked to the user during the conversation. All nodes (beside the root) have an edgeLabel property, which rapresents the label of the edge from the parent node and, in our case, also the answer to the parent's question that will determine the next node in the path. 
+The tree is specified in a recursive way, where each node, except the leafs, contains the list of its children nodes. Moreover, every node has a label attribute specifying the attribute used to split the data at the node or, in case of a leaf, the conclusion reached. All nodes (beside the root) have an edgeLabel property, which rapresents the label of the edge from the parent node and, in our case, also the answer to the parent's question that will determine the next node in the path. 
 
 For a complete example of a decison tree specified in such a format, please have a look at the examples/test_tree.json file, which represent the following classification tree used to take the decision of playing tennis based on the weather:
 
@@ -14,9 +14,19 @@ For a complete example of a decison tree specified in such a format, please have
 </p>
 
 
+The tree JSON specification can be passed directly in the console as a string argument (please be careful with escaping double quotes) or as a file parameter (related examples available in the [Usage section](#Usage). 
+
+Moreover, a questions file can be used to specify, for each different node label, the question that should be asked to the user. If the question file is not provided, the interpreter will simply ask the user for the value of the attribute, without a personalized text. 
+
+An example of a question file (that can be found in the example folder under test_questions.txt) based on the weather decision tree shown before, is the following: 
+
+`outlook : What's the weather like?
+humidity : How's humidity?
+windy : Is it windy?`
+
 ## Features
 
-The application is a simple chatbot interpreter. It allows the traversal of a given decision tree, asking the user a question every time it reaches a new node. If the question is a categorical one and therefore the number of possible asnwers is fixed, the chatbot will send the question along with the options as clickable buttons.
+The application is a simple chatbot interpreter. It allows the traversal of a given decision tree, asking the user a question every time it reaches a new node. Questions can be customized using an external file, as pointed out in the previous section. If the question is a categorical one and therefore the number of possible asnwers is fixed, the chatbot will send the question along with the options as clickable buttons.
 
 On the other hand, if the question requires a numerical answer, the user is able to send freely every possible number as answer and the bot will then handle it appropriately. 
 
@@ -26,7 +36,7 @@ When a leaf node is reached, the application will send the user the final conclu
 
 ## Installation
 
-Given its nature, Node.js is required. Moreover, the botbuilder and restify packages are required to create the local server and bot connection. All dependencies have already been specified in the package.json file, therefore you can follow this process to correctly install the application:
+Given its nature, Node.js is required. Moreover, the botbuilder and restify packages are required to create the local server and bot connection. All dependencies have already been specified in the package.json file, therefore you can follow this process to correctly install the application using just a simple command:
 
     1. Clone this repository or download the code as a compressed archive (and decompress it).
     2. Open a terminal or command prompt and, in the root folder of the project execute the dependency installation 
@@ -36,14 +46,22 @@ Furthermore, since the chatbot application will be created as a local RESTful se
 
 ## Usage
 
-To start the bot interpreter, open a terminal window in the root folder of the project and execute the following command:
-`node bot.js path_to_json_file` where path_to_json_file is the path to your json file specifying the decision tree.
+Bot Interpreter is CLI that accepts as input the JSON specification of a decision tree and/or the following options: 
 
-For example, we can use one of the sample graphs provided with the tool and test our both using the following command:
+`Options:
+  -V, --version                output the version number
+  -t, --tree <file_path>       file path to the exported json decision tree
+  -q, --questions <file_path>  file path to the question specification file
+  -h, --help                   output usage information`
 
-`node bot.js test_tree.json`
+For example, we can use one of the sample graphs provided with the tool and its questions file to test our both using the following command:
 
-After the bot application has started, we can connect to it and start talking!
+`node bot.js - t examples/test_tree.json -q examples/test_questions.txt`
+
+
+We can also pass the JSON specification directly in the console without specifying any options, but this is more platform dependent since the JSON specification should be enclosed in double quotes (") and those used inside it, for example to specify the labels, should be escaped according to the OS specification. The ideal usage of this feature is to combine it with our CustomJ48 extension of the J48 algorithm of the Weka library. CustomJ48 generates correctly the JSON specification already escaped so that can be used in the console using the command substituion techniques (for examples and more references see: ....). 
+
+After the bot application has started, we can connect to it and start chatting!
 The application will dump on the console the address and port used on the local machine and that can be used for the connection. 
 
 If you are using, as suggested, the Bot Framework Emulator, it is possible to simply connect to the application using a chat-fashion interface and then save the configuration to a file for faster future connections. 
@@ -56,4 +74,4 @@ Note: the port number could vary depending on the available ports of your machin
 
 ## License
 
-The code for this Node.js application is distributed under the MIT license, see the `LICENSE` file for more information. 
+The code for this Node.js application is distributed under the MIT license, please check the `LICENSE` file for more information. 
