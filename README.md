@@ -14,7 +14,7 @@ For a complete example of a decison tree specified in such a format, please have
 </p>
 
 
-The tree JSON specification can be passed directly in the console as a string argument (please be careful with escaping double quotes) or as a file parameter (related examples available in the [Usage section](#Usage). 
+The tree JSON specification can be passed directly in the console as a string argument (please be careful with escaping double quotes) or as a file parameter (related examples available in the [Usage section](#usage). 
 
 Moreover, a questions file can be used to specify, for each different node label, the question that should be asked to the user. If the question file is not provided, the interpreter will simply ask the user for the value of the attribute, without a personalized text. 
 

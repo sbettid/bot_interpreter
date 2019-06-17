@@ -230,19 +230,14 @@ function manageAnswer(session, results) {
 
 
 function extract_answers(questionsFile) {
-   var key, value;
-
-   //open and read file
-   var lineReader = rl.createInterface({
-      input: fs.createReadStream(questionsFile)
-   });
+   
+   //read questions file
+   questions = fs.readFileSync(questionsFile);
    //parse each line
-   lineReader.on('line', function (line) {
-      key = line.substring(0, line.indexOf(':')).trim(); //parse the key
-      value = line.substring(line.indexOf(':') + 1).trim(); // parse the value
-
-      //add everything to the questions list map
+   JSON.parse(questions, (key, value) => {
+      console.log("Key is: " + key);
+      console.log("Value is: " + value);
       questionsList.set(key, value);
-      //console.log("Key: " + key + " with question " + value);
    });
+   
 }
