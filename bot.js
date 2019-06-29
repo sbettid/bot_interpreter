@@ -132,7 +132,18 @@ function start_bot() {
             session.userData.answerMap = {};
 
             //Print conclusion and end conversation
-            session.send("My conclusion is: " + node.label);
+            //We first check if the conclusion can be found in the questions file
+            var conclusion = "My conclusion is: " + node.label;
+            
+            questionsList.forEach(function(val, key, map){
+               if(node.label.includes(key)){
+                  conclusion = val;
+                  console.log("I found " + val + " as corresponding conclusion");
+               }
+            });
+                  
+           
+            session.send(conclusion);
             session.endConversation("Bye, it has been a pleasure!");
          } else {
 
@@ -264,9 +275,10 @@ function extract_answers(questionsFile) {
    questions = fs.readFileSync(questionsFile);
    //parse each line
    JSON.parse(questions, (key, value) => {
-      console.log("Key is: " + key);
+      console.log("Key is: " + key + " " + (key == "") );
       console.log("Value is: " + value);
-      questionsList.set(key, value);
+      if(key != "")
+         questionsList.set(key, value);
    });
 
 }
