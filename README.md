@@ -14,16 +14,21 @@ For a complete example of a decison tree specified in such a format, please have
 </p>
 
 
-The tree JSON specification can be passed directly in the console as a string argument (please be careful with escaping double quotes) or as a file parameter (related examples available in the [Usage section](#usage). 
+The tree JSON specification can be provided using STDIN after the software has been launched, or as a file parameter (related examples available in the [Usage section](#usage). 
 
-Moreover, a questions file can be used to specify, for each different node label, the question that should be asked to the user. If the question file is not provided, the interpreter will simply ask the user for the value of the attribute, without a personalized text. 
+Moreover, a JSON questions file can be used to specify, for each different node label, the question that should be asked to the user and, for leaf nodes, the desired message that we would like to return. If the question file is not provided, the interpreter will simply ask the user for the value of the attribute, without a personalized text. 
 
-An example of a question file (that can be found in the example folder under test_questions.txt) based on the weather decision tree shown before, is the following: 
+The questions file should contain a JSON object with the value of the label properties followed by the desired message. An example of a question file (that can be found in the example folder under test_questions.json) based on the weather decision tree shown before, is the following: 
 
-`outlook : What's the weather like?
-humidity : How's humidity?
-windy : Is it windy?`
-
+```
+{
+"outlook" : "What's the weather like?",
+"humidity" : "How's humidity?",
+"windy" : "Is it windy?",
+"yes" : "There are perfect weather conditions to play! Have fun :)",
+"no" : "I suggest you to relax today, weather conditions could make the game difficult"
+}
+```
 ## Features
 
 The application is a simple chatbot interpreter. It allows the traversal of a given decision tree, asking the user a question every time it reaches a new node. Questions can be customized using an external file, as pointed out in the previous section. If the question is a categorical one and therefore the number of possible asnwers is fixed, the chatbot will send the question along with the options as clickable buttons.
@@ -32,11 +37,11 @@ On the other hand, if the question requires a numerical answer, the user is able
 
 The application remembers every question and answer it has asked previously as a pair, in order to avoid asking multiple times the same question, if it appears more than once in the tree. In that case, the chatbot will use the previous stored value as answer. 
 
-When a leaf node is reached, the application will send the user the final conclusion/value and then will terminate, dumping on the console window all question/answer pairs used in the conversation.
+When a leaf node is reached, the application will send the user the final conclusion/value and will then terminate, dumping on the console window all question/answer pairs used in the conversation.
 
 ## Installation
 
-Given its nature, Node.js is required. Moreover, the botbuilder and restify packages are required to create the local server and bot connection. All dependencies have already been specified in the package.json file, therefore you can follow this process to correctly install the application using just a simple command:
+Given its nature, Node.js is required. Moreover, the botbuilder, commander and restify packages are required to create the local server, the bot connection and to manage arguments. All dependencies have already been specified in the package.json file, therefore you can follow this process to correctly install the application using just a simple command:
 
     1. Clone this repository or download the code as a compressed archive (and decompress it).
     2. Open a terminal or command prompt and, in the root folder of the project execute the dependency installation 
@@ -59,7 +64,7 @@ For example, we can use one of the sample graphs provided with the tool and its 
 `node bot.js - t examples/test_tree.json -q examples/test_questions.txt`
 
 
-We can also pass the JSON specification directly in the console without specifying any options, but this is more platform dependent since the JSON specification should be enclosed in double quotes (") and those used inside it, for example to specify the labels, should be escaped according to the OS specification. The ideal usage of this feature is to combine it with our CustomJ48 extension of the J48 algorithm of the Weka library. CustomJ48 generates correctly the JSON specification already escaped so that can be used in the console using the command substituion techniques (for examples and more references see: ....). 
+We can also pass the JSON specification directly in the console using STDIN without specifying any option. The ideal usage of this feature is to combine it with our CustomJ48 extension of the J48 algorithm of the Weka library. In this way, the two commands can be specified so that they can be piped together to create directly the chatbot starting from an example file.
 
 After the bot application has started, we can connect to it and start chatting!
 The application will dump on the console the address and port used on the local machine and that can be used for the connection. 
@@ -74,4 +79,4 @@ Note: the port number could vary depending on the available ports of your machin
 
 ## License
 
-The code for this Node.js application is distributed under the MIT license, please check the `LICENSE` file for more information. 
+The code for this Node.js application is distributed under the MIT license, please check the [LICENSE](LICENSE) file for more information. 
