@@ -53,11 +53,13 @@ Furthermore, since the chatbot application will be created as a local RESTful se
 
 Bot Interpreter is CLI that accepts as input the JSON specification of a decision tree and/or the following options: 
 
-`Options:
+```
+Options:
   -V, --version                output the version number
   -t, --tree <file_path>       file path to the exported json decision tree
   -q, --questions <file_path>  file path to the question specification file
-  -h, --help                   output usage information`
+  -h, --help                   output usage information
+  ```
 
 For example, we can use one of the sample graphs provided with the tool and its questions file to test our both using the following command:
 
