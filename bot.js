@@ -4,7 +4,8 @@ const fs = require('fs'); //used to read the JSON input file
 var program = require('commander'); //used to parse console arguments and display help
 
 //By default we are not using questions from an external file
-var questionsList = new Map();
+var questionsList = new Map(); //questions
+var answerList = new Map(); //answers
 var choices;
 var isNumeric = false;
 
@@ -28,13 +29,14 @@ program.parse(process.argv);
 
 
 if (program.questions) //If the user specified a questions file
-   extract_answers(program.questions); //Extratc the answers and build the map
+   extract_answers(program.questions); //Extract the answers and build the map
 
 
 var rawdata; // JSON data that need to be parsed
 
 /*
-Comment explaining duplicated call
+Here we have two different calls to start bot, that is because, having the call (which is the same) outside the if/else would result,
+in the second case, in the execution of the bot without the specified JSON, since the reading from STDIN is asynchronous
 */
 
 if (program.tree) { //If the user specified the input file
@@ -135,7 +137,7 @@ function start_bot() {
             //We first check if the conclusion can be found in the questions file
             var conclusion = "My conclusion is: " + node.label;
             
-            questionsList.forEach(function(val, key, map){
+            answerList.forEach(function(val, key, map){
                if(node.label.includes(key)){
                   conclusion = val;
                   console.log("I found " + val + " as corresponding conclusion");
@@ -273,12 +275,23 @@ function extract_answers(questionsFile) {
 
    //read questions file
    questions = fs.readFileSync(questionsFile);
-   //parse each line
-   JSON.parse(questions, (key, value) => {
-      console.log("Key is: " + key + " " + (key == "") );
-      console.log("Value is: " + value);
-      if(key != "")
-         questionsList.set(key, value);
-   });
+   //parse the file
+   var questionAndAnswers = JSON.parse(questions);
+   
+   //Now, if the questions file has the questions object
+   if(questionAndAnswers.hasOwnProperty("questions")){
+      var q = questionAndAnswers.questions;
+      for(var key in q)
+         questionsList.set(key, q[key]);
+      
+   }
+
+   //And now let's do the same for the answers
+   if(questionAndAnswers.hasOwnProperty("answers")){
+      var a = questionAndAnswers.answers;
+      for(var key in a){
+         answerList.set(key, a[key]);
+      }
+   }
 
 }

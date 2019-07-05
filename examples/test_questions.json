@@ -1,7 +1,11 @@
 {
-"outlook" : "What's the weather like?",
-"humidity" : "How's humidity?",
-"windy" : "Is it windy?",
-"yes" : "There are perfect weather conditions to play! Have fun :)",
-"no" : "I suggest you to relax today, weather conditions could make the game difficult"
+   "questions": {
+    "outlook" : "What's the weather like?",
+    "humidity" : "How's humidity?",
+    "windy" : "Is it windy?"
+   }, 
+   "answers" : {
+       "yes" : "There are perfect weather conditions to play! Have fun :)",
+       "no" : "I suggest you to relax today, weather conditions could make the game difficult"
+   }
 }
