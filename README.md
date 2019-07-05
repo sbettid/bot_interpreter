@@ -7,7 +7,7 @@ The application takes as input a JSON specification of the decision tree in the 
 
 The tree is specified in a recursive way, where each node, except the leafs, contains the list of its children nodes. Moreover, every node has a label attribute specifying the attribute used to split the data at the node or, in case of a leaf, the conclusion reached. All nodes (beside the root) have an edgeLabel property, which rapresents the label of the edge from the parent node and, in our case, also the answer to the parent's question that will determine the next node in the path. 
 
-For a complete example of a decison tree specified in such a format, please have a look at the examples/test_tree.json file, which represent the following classification tree used to take the decision of playing tennis based on the weather:
+For a complete example of a decison tree specified in such a format, please have a look at the [examples/test_tree.json](examples/test_tree.json) file, which represent the following classification tree used to take the decision of playing tennis based on the weather:
 
 <p style="text-align: center">
     <img src="examples/tree_test.jpg">
@@ -16,17 +16,21 @@ For a complete example of a decison tree specified in such a format, please have
 
 The tree JSON specification can be provided using STDIN after the software has been launched, or as a file parameter (related examples available in the [Usage section](#usage). 
 
-Moreover, a JSON questions file can be used to specify, for each different node label, the question that should be asked to the user and, for leaf nodes, the desired message that we would like to return. If the question file is not provided, the interpreter will simply ask the user for the value of the attribute, without a personalized text. 
+Moreover, a JSON questions file can be used to specify (using the appropriate parameter), for each different node's label, the question that should be asked to the user and, for leaf nodes, the desired message that we would like to return. If the question file is not provided, the interpreter will simply ask the user for the value of the attribute, without a personalized text. 
 
-The questions file should contain a JSON object with the value of the label properties followed by the desired message. An example of a question file (that can be found in the example folder under test_questions.json) based on the weather decision tree shown before, is the following: 
+The questions file should contain a JSON object with two distinct objects defining questions and answers. For each question, the label corresponding to the associated node should be provided along with the desired message. For answers (corresponding to leafs), the label can also be specified partially, since the interpreter applies a "contains" strategy to find the correct message for a given leaf. This is particularly helpful if in the tree the label is followed by a number (generally representing the number of instances reaching the node). The following file is the representation of possible questions associated with the tree presented before and available in the [examples/test_questions.json](examples/test_questions.json) file: 
 
 ```
 {
-"outlook" : "What's the weather like?",
-"humidity" : "How's humidity?",
-"windy" : "Is it windy?",
-"yes" : "There are perfect weather conditions to play! Have fun :)",
-"no" : "I suggest you to relax today, weather conditions could make the game difficult"
+   "questions": {
+    "outlook" : "What's the weather like?",
+    "humidity" : "How's humidity?",
+    "windy" : "Is it windy?"
+   }, 
+   "answers" : {
+       "yes" : "There are perfect weather conditions to play! Have fun :)",
+       "no" : "I suggest you to relax today, weather conditions could make the game difficult"
+   }
 }
 ```
 ## Features
