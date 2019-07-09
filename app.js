@@ -127,7 +127,7 @@ function start_bot() {
 
             //dump variables from the list
             console.log("-------DUMP VARIABLE START-------");
-            console.log(session.userData.answerMap);
+            console.log(JSON.stringify(session.userData.answerMap, null, "\t"));
             console.log("-------DUMP VARIABLE END-------");
 
             //clean the answer map
