@@ -67,7 +67,7 @@ Options:
 
 For example, we can use one of the sample graphs provided with the tool and its questions file to test our both using the following command:
 
-`node bot.js - t examples/test_tree.json -q examples/test_questions.txt`
+`node app.js - t examples/test_tree.json -q examples/test_questions.txt`
 
 
 We can also pass the JSON specification directly in the console using STDIN without specifying any option. The ideal usage of this feature is to combine it with our CustomJ48 extension of the J48 algorithm of the Weka library. In this way, the two commands can be specified so that they can be piped together to create directly the chatbot starting from an example file.
