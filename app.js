@@ -6,8 +6,7 @@ var program = require('commander'); //used to parse console arguments and displa
 //By default we are not using questions from an external file
 var questionsList = new Map(); //questions
 var answerList = new Map(); //answers
-var choices;
-var isNumeric = false;
+
 
 const readline = require('readline');
 
@@ -81,10 +80,12 @@ function start_bot() {
    //Defining bot and dialogs
    var bot = new builder.UniversalBot(connector, [
       function (session) {
-         session.userData.node = currentNode;
-         session.userData.answerMap = {};
+         session.privateConversationData .node = currentNode;
+         session.privateConversationData .isNumeric = false;
+         session.privateConversationData .answerMap = {};
+         session.privateConversationData .choices = undefined;
          session.beginDialog("traverseTree");
-      }]);
+      }]).set('storage', inMemoryStorage); // Register in-memory storage ;
 
    //disable persistence of conversation data
    bot.set(`persistConversationData`, false);
@@ -109,8 +110,8 @@ function start_bot() {
 
       function (session) {
 
-         var node = session.userData.node;
-         var answerMap = session.userData.answerMap;
+         var node = session.privateConversationData .node;
+         var answerMap = session.privateConversationData .answerMap;
 
          //if the current label does not have the label property there is an error with the JSON
          if (!node.hasOwnProperty('label')) {
@@ -127,11 +128,11 @@ function start_bot() {
 
             //dump variables from the list
             console.log("-------DUMP VARIABLE START-------");
-            console.log(JSON.stringify(session.userData.answerMap, null, "\t"));
+            console.log(JSON.stringify(session.privateConversationData .answerMap, null, "\t"));
             console.log("-------DUMP VARIABLE END-------");
 
             //clean the answer map
-            session.userData.answerMap = {};
+            session.privateConversationData .answerMap = {};
 
             //Print conclusion and end conversation
             //We first check if the conclusion can be found in the questions file
@@ -157,7 +158,7 @@ function start_bot() {
                console.log("answer is " + answ);
 
                if (answ["type"] == "numeric") {
-                  isNumeric = true;
+                  session.privateConversationData .isNumeric = true;
                }
 
                manageAnswer(session, answ["answer"]); //directly jump to the right branch
@@ -174,12 +175,12 @@ function start_bot() {
                else
                   question = "What is the value of " + node.label; //question
 
-               choices = []; //answer array
+                  session.privateConversationData .choices = []; //answer array
 
                //check type of question, is it a numeric/nominal answer?
                if (node.children[0].hasOwnProperty('edgeLabel') && (node.children[0].edgeLabel.includes('<=') || node.children[0].edgeLabel.includes('>'))) {
 
-                  isNumeric = true; //mark the question as numeric  
+                  session.privateConversationData .isNumeric = true; //mark the question as numeric  
 
                   builder.Prompts.number(session, question); //show the prompt to the user
 
@@ -194,11 +195,11 @@ function start_bot() {
                         session.endConversation("There has been a problem with my decision strategy. Please refer to the terminal logs");
                      }
 
-                     choices.push(child.edgeLabel);
+                     session.privateConversationData .choices.push(child.edgeLabel);
                   });
 
                   //choices array is now complete so we can send the question
-                  builder.Prompts.choice(session, question, choices, { listStyle: builder.ListStyle.button, minScore: 1.0 });
+                  builder.Prompts.choice(session, question, session.privateConversationData .choices, { listStyle: builder.ListStyle.button, minScore: 1.0 });
                }
             }
          }
@@ -206,17 +207,17 @@ function start_bot() {
       function (session, results) {
          //Create the appropriate answer object so we can add it to the answer map
          var answ;
-         if (isNumeric) {
+         if (session.privateConversationData .isNumeric) {
             answ = { "answer": results, "type": "numeric" };
          } else {
             answ = { "answer": results, "type": "categorical" };
          }
 
          //add it to the map
-         var answerMap = session.userData.answerMap;
-         console.log("DEBUG [150]: " + session.userData.answerMap);
-         console.log("DEBUG [150]: " + session.userData.node);
-         var nodeLab = session.userData.node.label;
+         var answerMap = session.privateConversationData .answerMap;
+         console.log("DEBUG [150]: " + session.privateConversationData .answerMap);
+         console.log("DEBUG [150]: " + session.privateConversationData .node);
+         var nodeLab = session.privateConversationData .node.label;
          answerMap[nodeLab] = answ;
 
          //We now have the choice the user made in the current subtree
@@ -232,17 +233,17 @@ function manageAnswer(session, results) {
    //If it is numeric we have to perform the actual comparison to choose the branch
    //otherwise, we just compare the labels
 
-   if (isNumeric) {
+   if (session.privateConversationData .isNumeric) {
 
-      session.userData.node.children.forEach(function (child) {
+      session.privateConversationData .node.children.forEach(function (child) {
 
          if (child.edgeLabel.includes('<=')) {
             //parsing value from the edge label
             var val = parseFloat(child.edgeLabel.replace(/<=\s*/g, ''));
 
             if (results.response <= val) { //comparing user's value with label one and the given operator
-               session.userData.node = child;
-               isNumeric = false;
+               session.privateConversationData .node = child;
+               session.privateConversationData .isNumeric = false;
                session.replaceDialog("traverseTree");
             }
 
@@ -252,18 +253,18 @@ function manageAnswer(session, results) {
             var val = parseFloat(child.edgeLabel.replace(/>\s*/g, ''));
 
             if (results.response > val) { //comparing user's value with label one and the given operator
-               session.userData.node = child;
-               isNumeric = false;
+               session.privateConversationData .node = child;
+               session.privateConversationData .isNumeric = false;
                session.replaceDialog("traverseTree");
             }
          }
       });
    }
    else {
-      session.userData.node.children.forEach(function (child) {
+      session.privateConversationData .node.children.forEach(function (child) {
 
          if (child.edgeLabel == results.response.entity) {
-            session.userData.node = child;
+            session.privateConversationData .node = child;
             session.replaceDialog("traverseTree");
          }
       });

@@ -65,7 +65,7 @@ Options:
   -h, --help                   output usage information
   ```
 
-For example, we can use one of the sample graphs provided with the tool and its questions file to test our bot using the following command:
+For example, we can use one of the sample graphs provided with the tool and its questions file to test our bot, running the following command in the root folder of the project:
 
 `node app.js - t examples/test_tree.json -q examples/test_questions.json`
 
