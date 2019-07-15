@@ -1,11 +1,24 @@
 {
-   "questions": {
-    "outlook" : "What's the weather like?",
-    "humidity" : "How's humidity?",
-    "windy" : "Is it windy?"
-   }, 
-   "answers" : {
-       "yes" : "There are perfect weather conditions to play! Have fun :)",
-       "no" : "I suggest you to relax today, weather conditions could make the game difficult"
-   }
-}
+    "questions": {
+     "outlook" : {
+         "question": "What's the weather like?",
+         "values" : {
+             "sunny" : "The sun is shining",
+             "overcast" : "There are clouds, but no rain",
+             "rainy" : "It is currently raining"
+         }
+     },
+     "humidity" : { "question" : "How's humidity?"},
+     "windy" : {
+         "question" : "Is it windy?",
+         "values" : {
+             "TRUE" : "It is",
+             "FALSE" : "No wind so far"
+         }
+     }
+    }, 
+    "answers" : {
+        "yes" : "There are perfect weather conditions to play! Have fun :)",
+        "no" : "I suggest you to relax today, weather conditions could make the game difficult"
+    }
+ }

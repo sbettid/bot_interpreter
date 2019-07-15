@@ -80,10 +80,10 @@ function start_bot() {
    //Defining bot and dialogs
    var bot = new builder.UniversalBot(connector, [
       function (session) {
-         session.privateConversationData .node = currentNode;
-         session.privateConversationData .isNumeric = false;
-         session.privateConversationData .answerMap = {};
-         session.privateConversationData .choices = undefined;
+         session.privateConversationData.node = currentNode;
+         session.privateConversationData.isNumeric = false;
+         session.privateConversationData.answerMap = {};
+         session.privateConversationData.choices = undefined;
          session.beginDialog("traverseTree");
       }]).set('storage', inMemoryStorage); // Register in-memory storage ;
 
@@ -110,8 +110,8 @@ function start_bot() {
 
       function (session) {
 
-         var node = session.privateConversationData .node;
-         var answerMap = session.privateConversationData .answerMap;
+         var node = session.privateConversationData.node;
+         var answerMap = session.privateConversationData.answerMap;
 
          //if the current label does not have the label property there is an error with the JSON
          if (!node.hasOwnProperty('label')) {
@@ -167,7 +167,13 @@ function start_bot() {
 
                //We check if we are using the questions file or the default mode
                var question;
-               var retrievedQuestion = questionsList.get(node.label);
+               var retrievedQuestionNode = questionsList.get(node.label);
+               var retrievedQuestion;
+               if(retrievedQuestionNode != undefined && retrievedQuestionNode.hasOwnProperty('question'))
+                  retrievedQuestion = retrievedQuestionNode.question;
+               else
+                  retrievedQuestion = undefined;
+
                //console.log("retrievedQuestion is " + retrievedQuestion + " after looking for " + node.label);
                if (program.questions && retrievedQuestion != undefined) {
                   question = retrievedQuestion;
@@ -175,7 +181,7 @@ function start_bot() {
                else
                   question = "What is the value of " + node.label; //question
 
-                  session.privateConversationData .choices = []; //answer array
+                
 
                //check type of question, is it a numeric/nominal answer?
                if (node.children[0].hasOwnProperty('edgeLabel') && (node.children[0].edgeLabel.includes('<=') || node.children[0].edgeLabel.includes('>'))) {
@@ -186,6 +192,26 @@ function start_bot() {
 
                } else {
 
+                  //add to choices and correspondence map the options the user has
+                  session.privateConversationData.optionsMap = {};
+                  session.privateConversationData.choices = []; //answer array
+                  
+                  if(retrievedQuestionNode != undefined && retrievedQuestionNode.hasOwnProperty('values')){ //if we have the values of the question
+                     
+                    for(var key in retrievedQuestionNode.values){ //let's add every option that has been provided with the question
+                     session.privateConversationData.optionsMap[retrievedQuestionNode.values[key]] =  key;
+                     session.privateConversationData.choices.push(retrievedQuestionNode.values[key]);
+                    }
+                  }
+                  
+                  //Now get all entries of the map to compare them with remaining elements
+                  var entries = [];
+                  for(var key in session.privateConversationData.optionsMap)
+                     entries.push(session.privateConversationData.optionsMap[key]);
+                  
+                  console.log("Entries");
+                  console.log(entries);
+                  //and now add all the options that have not been provided, if any
                   node.children.forEach(function (child) { //for each child
 
                      //if the child does not have the edgeLabel property there is an error in the JSON file
@@ -195,11 +221,16 @@ function start_bot() {
                         session.endConversation("There has been a problem with my decision strategy. Please refer to the terminal logs");
                      }
 
-                     session.privateConversationData .choices.push(child.edgeLabel);
+                     if(! entries.includes(child.edgeLabel) ){
+                        console.log(child.edgeLabel + " was not provided in the JSON file");
+                        session.privateConversationData.choices.push(child.edgeLabel);
+                        session.privateConversationData.optionsMap[child.edgeLabel] = child.edgeLabel;
+                     }
                   });
-
+                  session.privateConversationData.testData = entries;
+                  console.log("Before sending " + JSON.stringify(session.privateConversationData.optionsMap));
                   //choices array is now complete so we can send the question
-                  builder.Prompts.choice(session, question, session.privateConversationData .choices, { listStyle: builder.ListStyle.button, minScore: 1.0 });
+                  builder.Prompts.choice(session, question, session.privateConversationData.choices, { listStyle: builder.ListStyle.button, minScore: 1.0 });
                }
             }
          }
@@ -207,43 +238,44 @@ function start_bot() {
       function (session, results) {
          //Create the appropriate answer object so we can add it to the answer map
          var answ;
-         if (session.privateConversationData .isNumeric) {
-            answ = { "answer": results, "type": "numeric" };
+         if (session.privateConversationData.isNumeric) {
+            answ = { "value": results.response, "type": "numeric" };
          } else {
-            answ = { "answer": results, "type": "categorical" };
+            console.log("Map is " + JSON.stringify(session.privateConversationData.optionsMap));
+            var branchLabel = session.privateConversationData.optionsMap[results.response.entity];
+            answ = { "value": branchLabel, "type": "categorical" };
          }
 
          //add it to the map
-         var answerMap = session.privateConversationData .answerMap;
-         console.log("DEBUG [150]: " + session.privateConversationData .answerMap);
-         console.log("DEBUG [150]: " + session.privateConversationData .node);
-         var nodeLab = session.privateConversationData .node.label;
+         var answerMap = session.privateConversationData.answerMap;
+         console.log("DEBUG [150]: " + session.privateConversationData.answerMap);
+         console.log("DEBUG [150]: " + session.privateConversationData.node);
+         var nodeLab = session.privateConversationData.node.label;
          answerMap[nodeLab] = answ;
 
          //We now have the choice the user made in the current subtree
-         manageAnswer(session, results);
+         manageAnswer(session, answ);
       }
    ]);
 }
 
 
-function manageAnswer(session, results) {
+function manageAnswer(session, answer) {
 
-   //console.log("DEBUG: inside manage answer with question " + session.userData.node.label + " and answer re")
    //If it is numeric we have to perform the actual comparison to choose the branch
    //otherwise, we just compare the labels
 
-   if (session.privateConversationData .isNumeric) {
+   if (session.privateConversationData.isNumeric) {
 
-      session.privateConversationData .node.children.forEach(function (child) {
+      session.privateConversationData.node.children.forEach(function (child) {
 
          if (child.edgeLabel.includes('<=')) {
             //parsing value from the edge label
             var val = parseFloat(child.edgeLabel.replace(/<=\s*/g, ''));
 
-            if (results.response <= val) { //comparing user's value with label one and the given operator
-               session.privateConversationData .node = child;
-               session.privateConversationData .isNumeric = false;
+            if (answer["value"] <= val) { //comparing user's value with label one and the given operator
+               session.privateConversationData.node = child;
+               session.privateConversationData.isNumeric = false;
                session.replaceDialog("traverseTree");
             }
 
@@ -252,19 +284,22 @@ function manageAnswer(session, results) {
             //parsing value from the edge label
             var val = parseFloat(child.edgeLabel.replace(/>\s*/g, ''));
 
-            if (results.response > val) { //comparing user's value with label one and the given operator
-               session.privateConversationData .node = child;
-               session.privateConversationData .isNumeric = false;
+            if (answer["value"] > val) { //comparing user's value with label one and the given operator
+               session.privateConversationData.node = child;
+               session.privateConversationData.isNumeric = false;
                session.replaceDialog("traverseTree");
             }
          }
       });
    }
    else {
-      session.privateConversationData .node.children.forEach(function (child) {
+      
+      //change response entity to valore corrispondente
+      
+      session.privateConversationData.node.children.forEach(function (child) {
 
-         if (child.edgeLabel == results.response.entity) {
-            session.privateConversationData .node = child;
+         if (child.edgeLabel == answer["value"]) {
+            session.privateConversationData.node = child;
             session.replaceDialog("traverseTree");
          }
       });
@@ -282,9 +317,10 @@ function extract_answers(questionsFile) {
    //Now, if the questions file has the questions object
    if(questionAndAnswers.hasOwnProperty("questions")){
       var q = questionAndAnswers.questions;
-      for(var key in q)
+      for(var key in q){
          questionsList.set(key, q[key]);
-      
+         
+      }
    }
 
    //And now let's do the same for the answers
