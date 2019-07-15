@@ -161,7 +161,7 @@ function start_bot() {
                   session.privateConversationData .isNumeric = true;
                }
 
-               manageAnswer(session, answ["answer"]); //directly jump to the right branch
+               manageAnswer(session, answ); //directly jump to the right branch
 
             } else { //otherwise we send the question
 
