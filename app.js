@@ -198,16 +198,15 @@ function start_bot() {
                   
                   if(retrievedQuestionNode != undefined && retrievedQuestionNode.hasOwnProperty('values')){ //if we have the values of the question
                      
+                     //We will store all the keys we find in the external file so we can check if we will miss something
+                     var entries = [];
                     for(var key in retrievedQuestionNode.values){ //let's add every option that has been provided with the question
                      session.privateConversationData.optionsMap[retrievedQuestionNode.values[key]] =  key;
                      session.privateConversationData.choices.push(retrievedQuestionNode.values[key]);
+
+                     entries.push(key); //we keep the ones found in array for a later comparison
                     }
                   }
-                  
-                  //Now get all entries of the map to compare them with remaining elements
-                  var entries = [];
-                  for(var key in session.privateConversationData.optionsMap)
-                     entries.push(session.privateConversationData.optionsMap[key]);
                   
                   console.log("Entries");
                   console.log(entries);
@@ -221,9 +220,10 @@ function start_bot() {
                         session.endConversation("There has been a problem with my decision strategy. Please refer to the terminal logs");
                      }
 
+                     //If this entry was not found in the external file
                      if(! entries.includes(child.edgeLabel) ){
                         console.log(child.edgeLabel + " was not provided in the JSON file");
-                        session.privateConversationData.choices.push(child.edgeLabel);
+                        session.privateConversationData.choices.push(child.edgeLabel); //we add it, so that we do not miss anything
                         session.privateConversationData.optionsMap[child.edgeLabel] = child.edgeLabel;
                      }
                   });

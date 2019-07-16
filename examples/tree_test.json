@@ -1,1 +1,37 @@
-{"label":"outlook" , "children" : [{"edgeLabel" : "sunny","label" : "humidity" ,"children": [{"edgeLabel" : "high","label" : "no (3.0)"},{"edgeLabel" : "normal","label" : "yes (2.0)"}]},{"edgeLabel" : "overcast","label" : "yes (4.0)"},{"edgeLabel" : "rainy","label" : "windy" ,"children": [{"edgeLabel" : "TRUE","label" : "no (2.0)"},{"edgeLabel" : "FALSE","label" : "yes (3.0)"}]}]}
+{
+    "label": "outlook",
+    "children": [
+        {
+            "edgeLabel": "sunny",
+            "label": "humidity",
+            "children": [
+                {
+                    "edgeLabel": "high",
+                    "label": "no (3.0)"
+                },
+                {
+                    "edgeLabel": "normal",
+                    "label": "yes (2.0)"
+                }
+            ]
+        },
+        {
+            "edgeLabel": "overcast",
+            "label": "yes (4.0)"
+        },
+        {
+            "edgeLabel": "rainy",
+            "label": "windy",
+            "children": [
+                {
+                    "edgeLabel": "TRUE",
+                    "label": "no (2.0)"
+                },
+                {
+                    "edgeLabel": "FALSE",
+                    "label": "yes (3.0)"
+                }
+            ]
+        }
+    ]
+}
