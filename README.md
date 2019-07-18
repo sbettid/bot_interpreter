@@ -9,30 +9,47 @@ The tree is specified in a recursive way, where each node, except the leafs, con
 
 For a complete example of a decison tree specified in such a format, please have a look at the [examples/test_tree.json](examples/test_tree.json) file, which represent the following classification tree used to take the decision of playing tennis based on the weather:
 
-<p style="text-align: center">
-    <img src="examples/tree_test.jpg">
-</p>
+![Graphical representation of the tree](examples/tree_test.jpg)
 
 
 The tree JSON specification can be provided using STDIN after the software has been launched, or as a file parameter (related examples available in the [Usage section](#usage). 
 
-Moreover, a JSON questions file can be used to specify (using the appropriate parameter), for each different node's label, the question that should be asked to the user and, for leaf nodes, the desired message that we would like to return. If the question file is not provided, the interpreter will simply ask the user for the value of the attribute, without a personalized text. 
+Moreover, a JSON questions file can be used to specify (using the appropriate parameter), for each different node's label, the question that should be asked to the user and the possible answers and, for leaf nodes, the desired message that we would like to return.  
 
-The questions file should contain a JSON object with two distinct objects defining questions and answers. For each question, the label corresponding to the associated node should be provided along with the desired message. For answers (corresponding to leafs), the label can also be specified partially, since the interpreter applies a "contains" strategy to find the correct message for a given leaf. This is particularly helpful if in the tree the label is followed by a number (generally representing the number of instances reaching the node). The following file is the representation of possible questions associated with the tree presented before and available in the [examples/test_questions.json](examples/test_questions.json) file: 
+The questions file contains a JSON object with up to two distinct objects defining questions and answers. Each question is an object, identified by its label, containing a question attribute with the related message and, if the question is categorical, a values array containing possible answers with a personalized message. For final answers (corresponding to leafs), the label can also be specified partially, since the interpreter applies a "contains" strategy to find the correct message for a given leaf. This is particularly helpful if in the tree the label is followed by a number (generally representing the number of instances reaching the node).
+
+All attributes in the file can be specified partially: we can also personalize only the question message or only the answers messages (also partially). The same approach can be used for conclusions, not all of them must be specified. In case the interpreter finds a missing question/answer/conclusion, it will simply use a default message.
+
+ The following file is the representation of possible questions (with the answers of the humidity question missing) associated with the tree presented before and available in the [examples/test_questions.json](examples/test_questions.json) file: 
 
 ```
 {
-   "questions": {
-    "outlook" : "What's the weather like?",
-    "humidity" : "How's humidity?",
-    "windy" : "Is it windy?"
-   }, 
-   "answers" : {
-       "yes" : "There are perfect weather conditions to play! Have fun :)",
-       "no" : "I suggest you to relax today, weather conditions could make the game difficult"
-   }
-}
+    "questions": {
+     "outlook" : {
+         "question": "What's the weather like?",
+         "values" : {
+             "sunny" : "The sun is shining",
+            
+             "rainy" : "It is currently raining"
+         }
+     },
+     "humidity" : { "question" : "How's humidity?"},
+     "windy" : {
+         "question" : "Is it windy?",
+         "values" : {
+             "TRUE" : "It is",
+             "FALSE" : "No wind so far"
+         }
+     }
+    }, 
+    "answers" : {
+        "yes" : "There are perfect weather conditions to play! Have fun :)",
+        "no" : "I suggest you to relax today, weather conditions could make the game difficult"
+    }
+ }
 ```
+
+
 ## Features
 
 The application is a simple chatbot interpreter. It allows the traversal of a given decision tree, asking the user a question every time it reaches a new node. Questions can be customized using an external file, as pointed out in the previous section. If the question is a categorical one and therefore the number of possible asnwers is fixed, the chatbot will send the question along with the options as clickable buttons.
