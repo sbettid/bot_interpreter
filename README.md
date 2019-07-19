@@ -12,6 +12,8 @@ For a complete example of a decison tree specified in such a format, please have
 ![Graphical representation of the tree](examples/tree_test.jpg)
 
 
+Moreover, a tree that can be used as input can be generated and exported using the complementary software for the creation of decision tree starting from a dataset, always part of the thesis, that can be found [at this address](https://gitlab.inf.unibz.it/Davide.Sbetti/customj48);
+
 The tree JSON specification can be provided using STDIN after the software has been launched, or as a file parameter (related examples available in the [Usage section](#usage). 
 
 Moreover, a JSON questions file can be used to specify (using the appropriate parameter), for each different node's label, the question that should be asked to the user and the possible answers and, for leaf nodes, the desired message that we would like to return.  
