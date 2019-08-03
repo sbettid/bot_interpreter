@@ -196,10 +196,11 @@ function start_bot() {
                   session.privateConversationData.optionsMap = {};
                   session.privateConversationData.choices = []; //answer array
                   
+				  var entries = [];
+
                   if(retrievedQuestionNode != undefined && retrievedQuestionNode.hasOwnProperty('values')){ //if we have the values of the question
                      
                      //We will store all the keys we find in the external file so we can check if we will miss something
-                     var entries = [];
                     for(var key in retrievedQuestionNode.values){ //let's add every option that has been provided with the question
                      session.privateConversationData.optionsMap[retrievedQuestionNode.values[key]] =  key;
                      session.privateConversationData.choices.push(retrievedQuestionNode.values[key]);
