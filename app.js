@@ -181,10 +181,12 @@ function start_bot() {
                else
                   question = "What is the value of " + node.label; //question
 
-                
+                //Prepare regular expression to check question type
+				var greaterRegEx = RegExp('^>');
+				var smallerRegEx = RegExp('^<=');
 
                //check type of question, is it a numeric/nominal answer?
-               if (node.children[0].hasOwnProperty('edgeLabel') && (node.children[0].edgeLabel.includes('<=') || node.children[0].edgeLabel.includes('>'))) {
+               if (node.children[0].hasOwnProperty('edgeLabel') && (smallerRegEx.test(node.children[0].edgeLabel) || greaterRegEx.test(node.children[0].edgeLabel))) {
 
                   session.privateConversationData .isNumeric = true; //mark the question as numeric  
 
