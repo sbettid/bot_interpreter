@@ -126,14 +126,6 @@ function start_bot() {
          // variable states to the console and we terminate
          if (!node.hasOwnProperty('children')) {
 
-            //dump variables from the list
-            console.log("-------DUMP VARIABLE START-------");
-            console.log(JSON.stringify(session.privateConversationData .answerMap, null, "\t"));
-            console.log("-------DUMP VARIABLE END-------");
-
-            //clean the answer map
-            session.privateConversationData .answerMap = {};
-
             //Print conclusion and end conversation
             //We first check if the conclusion can be found in the questions file
             var conclusion = "My conclusion is: " + node.label;
@@ -144,9 +136,22 @@ function start_bot() {
                   console.log("I found " + val + " as corresponding conclusion");
                }
             });
-                  
-           
-            session.send(conclusion);
+            
+			var conclusionObj = {"value" : conclusion};
+			var conclusionLabel = "BOT_CONCLUSION_" + session.message.address.conversation.id;
+			session.privateConversationData.answerMap[conclusionLabel] = conclusionObj;
+
+			//The we add it to the answer map and we dump all the variables
+			  //dump variables from the list
+            console.log("-------DUMP VARIABLE START-------");
+            console.log(JSON.stringify(session.privateConversationData .answerMap, null, "\t"));
+            console.log("-------DUMP VARIABLE END-------");
+
+            //clean the answer map
+            session.privateConversationData .answerMap = {};
+            
+			//send the conclusion to the user and end conversation
+			session.send(conclusion);
             session.endConversation("Bye, it has been a pleasure!");
          } else {
 
@@ -302,6 +307,7 @@ function manageAnswer(session, answer) {
       session.privateConversationData.node.children.forEach(function (child) {
 
          if (child.edgeLabel == answer["value"]) {
+			console.log("Answer value is " + answer["value"]);
             session.privateConversationData.node = child;
             session.replaceDialog("traverseTree");
          }
