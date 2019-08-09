@@ -5,22 +5,22 @@ The application takes as input a JSON specification of the decision tree in the 
 
 `{label: “node1”, children: [{ edgeLabel: “to_node_2”, label: node_2 }, { edgeLabel: “to_node_3”, label: “node_3”, children […]  }]}`
 
-The tree is specified in a recursive way, where each node, except the leafs, contains the list of its children nodes. Moreover, every node has a label attribute specifying the attribute used to split the data at the node or, in case of a leaf, the conclusion reached. All nodes (beside the root) have an edgeLabel property, which rapresents the label of the edge from the parent node and, in our case, also the answer to the parent's question that will determine the next node in the path. 
+The tree is specified in a recursive way, where each node, except the leafs, contains the list of its children nodes. Moreover, every node has a label attribute specifying the attribute used to split the data at the node or, in case of a leaf, the conclusion reached. All nodes (beside the root) have an edgeLabel property, which represents the label of the edge from the parent node and, in our case, also the answer to the parent's question that will determine the next node in the path. 
 
 For a complete example of a decison tree specified in such a format, please have a look at the [examples/test_tree.json](examples/test_tree.json) file, which represent the following classification tree used to take the decision of playing tennis based on the weather:
 
 ![Graphical representation of the tree](examples/tree_test.jpg)
 
 
-Moreover, a tree that can be used as input can be generated and exported using the complementary software for the creation of decision tree starting from a dataset, always part of the thesis, that can be found [at this address](https://gitlab.inf.unibz.it/Davide.Sbetti/customj48);
+A tree that can be used as input can be generated and exported using the complementary software for the creation of decision tree starting from a dataset, always part of the thesis, that can be found [at this address](https://gitlab.inf.unibz.it/Davide.Sbetti/customj48);
 
-The tree JSON specification can be provided using STDIN after the software has been launched, or as a file parameter (related examples available in the [Usage section](#usage). 
+The tree JSON specification can be provided using STDIN after the software has been launched, or as a file parameter (related examples available in the [Usage section](#usage)). 
 
-Moreover, a JSON questions file can be used to specify (using the appropriate parameter), for each different node's label, the question that should be asked to the user and the possible answers and, for leaf nodes, the desired message that we would like to return.  
+Optionally, a JSON questions file can be used to specify (using the appropriate parameter), for each different node's label, the question that should be asked to the user and the possible answers and, for leaf nodes, the desired message that we would like to return.  
 
 The questions file contains a JSON object with up to two distinct objects defining questions and answers. Each question is an object, identified by its label, containing a question attribute with the related message and, if the question is categorical, a values array containing possible answers with a personalized message. For final answers (corresponding to leafs), the label can also be specified partially, since the interpreter applies a "contains" strategy to find the correct message for a given leaf. This is particularly helpful if in the tree the label is followed by a number (generally representing the number of instances reaching the node).
 
-All attributes in the file can be specified partially: we can also personalize only the question message or only the answers messages (also partially). The same approach can be used for conclusions, not all of them must be specified. In case the interpreter finds a missing question/answer/conclusion, it will simply use a default message.
+All attributes in the file can be specified partially: we can also personalize only the question message or only the answers messages (also partially). The same approach can be used for conclusions, not all of them should be specified. In case the interpreter finds a missing question/answer/conclusion, it will simply use a default message.
 
  The following file is the representation of possible questions (with the answers of the humidity question missing) associated with the tree presented before and available in the [examples/test_questions.json](examples/test_questions.json) file: 
 
@@ -54,11 +54,13 @@ All attributes in the file can be specified partially: we can also personalize o
 
 ## Features
 
-The application is a simple chatbot interpreter. It allows the traversal of a given decision tree, asking the user a question every time it reaches a new node. Questions can be customized using an external file, as pointed out in the previous section. If the question is a categorical one and therefore the number of possible asnwers is fixed, the chatbot will send the question along with the options as clickable buttons.
+The application is a simple chatbot interpreter. It allows the traversal of a given decision tree, asking the user a question every time it reaches a new node. Questions can be customized using an external file, as pointed out in the previous section. If the question is a categorical one and therefore the number of possible answers is finite, the chatbot will send the question along with the options as clickable buttons.
 
-On the other hand, if the question requires a numerical answer, the user is able to send freely every possible number as answer and the bot will then handle it appropriately. 
+On the other hand, if the question requires a numerical answer, the user is able to reply with every possible number and the bot will then handle it appropriately. 
 
-The application remembers every question and answer it has asked previously as a pair, in order to avoid asking multiple times the same question, if it appears more than once in the tree. In that case, the chatbot will use the previous stored value as answer. 
+The strategy used to understand whether a question is categorical or numerical is quite simple: if the first children's label starts with "<=" or ">" the question is numerical, otherwise it is considered categorical. This derives also from the ability of the chatbot to distinguish, in case of numerical questions, between two branches: a branch for numbers less or equal to a predefined threshold and one for greater numbers.
+
+The application remembers every question, along with its answer, it has asked previously as a pair, in order to avoid asking multiple times the same question, if it appears more than once in the tree. In that case, the chatbot will use the previous stored value as answer. 
 
 When a leaf node is reached, the application will send the user the final conclusion/value and will then terminate, dumping on the console window all question/answer pairs used in the conversation.
 
@@ -78,7 +80,7 @@ Bot Interpreter is CLI that accepts as input the JSON specification of a decisio
 
 ```
 Options:
-  -V, --version                output the version number
+  -v, --version                output the version number
   -t, --tree <file_path>       file path to the exported json decision tree
   -q, --questions <file_path>  file path to the question specification file
   -h, --help                   output usage information

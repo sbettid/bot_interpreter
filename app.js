@@ -16,8 +16,8 @@ const rl = readline.createInterface({
 });
 
 
-
-program.version('0.1.0'); // set the program version
+var pjson = require('./package.json');
+program.version(pjson.version, '-v, --version'); // set the program version to the one available in POM
 
 //Add the possible and required options
 program.option('-t, --tree <file_path>', 'file path to the exported json decision tree');
