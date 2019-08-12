@@ -43,7 +43,7 @@ if (program.tree) { //If the user specified the input file
    start_bot(); //and start the bot
 }
 else { //otherwise ask the user for the input
-   rl.question("Input your JSON here:", (data) => {
+   rl.question("", (data) => {
       rawdata = data;
       rl.close();
       // Start the bot 

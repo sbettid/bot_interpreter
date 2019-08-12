@@ -3,7 +3,23 @@ Bot Interpreter is a Node.js application able to use a decision tree, specified 
 
 The application takes as input a JSON specification of the decision tree in the following format: 
 
-`{label: “node1”, children: [{ edgeLabel: “to_node_2”, label: node_2 }, { edgeLabel: “to_node_3”, label: “node_3”, children […]  }]}`
+```
+{
+    label: “node1”, 
+    children: [
+        { 
+            edgeLabel: “to_node_2”, 
+            label: node_2
+        },
+        { 
+            edgeLabel: “to_node_3”, 
+            label: “node_3”, 
+            children […]
+        }
+    ]
+}
+
+```
 
 The tree is specified in a recursive way, where each node, except the leafs, contains the list of its children nodes. Moreover, every node has a label attribute specifying the attribute used to split the data at the node or, in case of a leaf, the conclusion reached. All nodes (beside the root) have an edgeLabel property, which represents the label of the edge from the parent node and, in our case, also the answer to the parent's question that will determine the next node in the path. 
 
@@ -12,7 +28,7 @@ For a complete example of a decison tree specified in such a format, please have
 ![Graphical representation of the tree](examples/tree_test.jpg)
 
 
-A tree that can be used as input can be generated and exported using the complementary software for the creation of decision tree starting from a dataset, always part of the thesis, that can be found [at this address](https://gitlab.inf.unibz.it/Davide.Sbetti/customj48);
+A tree that can be used as input can be generated and exported using the complementary software for the creation of decision trees starting from a dataset, always part of the thesis, that can be found [at this address](https://gitlab.inf.unibz.it/Davide.Sbetti/customj48);
 
 The tree JSON specification can be provided using STDIN after the software has been launched, or as a file parameter (related examples available in the [Usage section](#usage)). 
 
