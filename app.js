@@ -43,6 +43,7 @@ if (program.tree) { //If the user specified the input file
    start_bot(); //and start the bot
 }
 else { //otherwise ask the user for the input
+   console.error("Input your JSON:");
    rl.question("", (data) => {
       rawdata = data;
       rl.close();
@@ -138,13 +139,11 @@ function start_bot() {
             });
             
 			var conclusionObj = {"value" : conclusion};
-			var conclusionLabel = "BOT_CONCLUSION_" + session.message.address.conversation.id;
-			session.privateConversationData.answerMap[conclusionLabel] = conclusionObj;
-
+         var conclusionJSON = {"id" : session.message.address.conversation.id, "conclusion": conclusionObj, "answers": session.privateConversationData.answerMap};
 			//The we add it to the answer map and we dump all the variables
 			  //dump variables from the list
             console.log("-------DUMP VARIABLE START-------");
-            console.log(JSON.stringify(session.privateConversationData .answerMap, null, "\t"));
+            console.log(JSON.stringify(conclusionJSON, null, "\t"));
             console.log("-------DUMP VARIABLE END-------");
 
             //clean the answer map
