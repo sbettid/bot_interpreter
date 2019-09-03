@@ -1,6 +1,6 @@
 {
   "name": "bot_interpreter",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Given a decision tree in a specified format and optionally a file specifying the questions, it launches a bot based on the Microsoft Bot Framework",
   "main": "app.js",
   "scripts": {

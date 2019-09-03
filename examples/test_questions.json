@@ -4,7 +4,7 @@
          "question": "What's the weather like?",
          "values" : {
              "sunny" : "The sun is shining",
-            
+             "overcast" : "It is overcast",
              "rainy" : "It is currently raining"
          }
      },
